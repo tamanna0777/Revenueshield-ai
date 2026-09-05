@@ -1,0 +1,6 @@
+{
+  "name": "RevenueShield AI",
+  "description": "Predict. Prevent. Recover Revenue — AI Revenue Recovery and Orchestration Platform for Subscriptions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
