@@ -1,154 +1,534 @@
-# RevenueShield AI
+# 🚀 RevenueShield AI
 
-> **Autonomous Subscription Revenue Recovery Engine with Financial Policy Guardrails**
+> Autonomous AI-Powered Revenue Recovery Platform for Failed Digital Payments
 
-RevenueShield AI is an intelligent, policy-governed revenue recovery system engineered for Indian subscription businesses. It diagnoses payment failures, dynamically orchestrates high-leverage interventions, enforces strict financial guardrails, and provides transparent, immutable audit trails.
-
----
-
-## 1. Demo Mode (Zero-Config Simulation)
-
-RevenueShield AI is **fully functional out of the box with zero external configuration**:
-- **No Razorpay Account Needed**: If credentials are not provided in the environment, the engine automatically defaults to **DEMO Mode**.
-- **Deterministic Synthetic Datasets**: Generates realistic subscription universes (5,000 customers, 20,000+ payment events) using seeded pseudo-random number generators (PRNG) with strict referential integrity.
-- **Fair Counterfactual Simulation**: Employs a single shared random draw per recovery case (`u ~ Uniform(0, 1)`) to evaluate baseline blind retries against AI-governed interventions, guaranteeing mathematically rigorous incremental lift attribution.
-- **Interactive UI Dashboard**: Instant real-time view of recovery KPIs, failure cause distributions, prioritized action queues, and interactive controls (strategy toggles, kill switches, and sample size selectors).
+[![Razorpay AI Builder Internship 2026](https://img.shields.io/badge/Razorpay-AI%20Builder%202026-blue)](#)
+[![React](https://img.shields.io/badge/React-19-blue)](#)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)](#)
+[![Node.js](https://img.shields.io/badge/Node.js-Backend-green)](#)
+[![AI Powered](https://img.shields.io/badge/AI-Powered-orange)](#)
 
 ---
 
-## 2. Razorpay Test-Mode Setup
+## 🌐 Live Demo
 
-RevenueShield AI integrates seamlessly with **Razorpay Test Mode** for sandbox testing and webhook processing.
+**Netlify Deployment**
 
-### Environment Variables
-
-Configure the following variables in your `.env` or environment secrets:
-
-```env
-# Optional: Defaults to DEMO mode if missing
-RAZORPAY_KEY_ID="rzp_test_yourKeyId"
-RAZORPAY_KEY_SECRET="yourTestKeySecret"
-RAZORPAY_WEBHOOK_SECRET="yourWebhookSecret"
-```
-
-> **IMPORTANT**: Never configure Live credentials (`rzp_live_*`). Live execution is intentionally hardcoded to fail safely in this build.
-
-### Webhook Endpoint
-
-- **Path**: `POST /api/webhooks/razorpay`
-- **Supported Events**:
-  - `payment.failed`: Normalized and routed through diagnosis, prioritization, policy evaluation, and audit logging.
-  - `payment.captured`: Tracked for successful settlement attribution.
-  - `subscription.halted`: Triggers high-urgency dunning workflow.
-  - `subscription.charged`: Recorded for recurring cycle continuity.
-  - `invoice.paid`: Evaluated for customer ledger reconciliation.
-
-### Local Simulation & Testing
-
-You can simulate signed Razorpay test webhooks without needing public webhook tunnel endpoints:
-- **Local Simulation Endpoint**: `POST /api/webhooks/test-simulate`
-- **Automated Test Suite**: Run `npm test` to execute all 89 unit tests across Phases 1–10.
+https://tranquil-cactus-3b3555.netlify.app
 
 ---
 
-## 3. Financial AI Policy Guardrails
+## 🎥 Demo Video
 
-A core architectural tenet of RevenueShield AI is that **high recovery probability does not grant unconstrained authority to charge customers or dispatch interventions**. All actions pass through the deterministic Policy Engine before execution.
+**Project Demonstration (5 Minutes)**
 
-```
-Payment Event → Normalization → Diagnosis → Prioritization → Policy Engine → Execution/Hold → Audit Trail
-```
-
-### Key Policy Guardrails
-
-1. **Global Kill Switch (`isKillSwitchEnabled`)**:
-   - An immediate administrative emergency brake.
-   - When enabled, halts all automated interventions system-wide and marks requests as `BLOCKED`.
-   - Can be toggled dynamically in the UI or via `POST /api/policy/kill-switch`.
-
-2. **Cooldown Period (`cooldownMinutes`)**:
-   - Default: `60 minutes`.
-   - Prevents rapid-fire repeated actions on the same customer case, protecting customer experience and preventing issuer spam flags.
-
-3. **Maximum Automated Attempts (`maxAutomatedAttempts`)**:
-   - Default: `3 attempts`.
-   - Halts automated retries once the threshold is reached. Further attempts transition into `BLOCKED` or require manual operational review.
-
-4. **Approval Threshold for High-Value Revenue (`approvalAmountThresholdInr`)**:
-   - Default: `₹15,000`.
-   - Enforces **Bounded Autonomy**: any transaction at risk exceeding this threshold is placed into `PENDING_APPROVAL`, even if the model predicts a 99% recovery probability.
-
-5. **Strategy Feature Toggles**:
-   - Operators can enable/disable specific intervention tactics (`allowSmartRetry`, `allowPaymentMethodUpdate`, `allowCustomerNotification`, `allowIncentiveOffer`) without redeploying code.
-
-6. **Action Lifecycle States**:
-   - `PLANNED`: Initial decision formulated.
-   - `PENDING_APPROVAL`: Held by policy rules for human review.
-   - `APPROVED`: Authorized by human operator.
-   - `EXECUTED`: Successfully executed via test mode or dry-run.
-   - `RECOVERED`: Transaction verified as successfully settled.
-   - `NOT_RECOVERED`: Recovery attempt concluded unsuccessfully.
-   - `BLOCKED`: Denied by policy guardrails.
+https://drive.google.com/file/d/15Pbl64CnXJ2NdBg2exGvx5SOBVH8V7Bj/view?usp=sharing
 
 ---
 
-## 4. Security Disclosures & Invariants
+# 📌 Problem Statement
 
-- **Live Mode Execution Barrier**: Live transactions are strictly prohibited. If `LIVE` mode is detected anywhere, the system fails safely with: `"Live execution is disabled in this build."`
-- **Raw Request Body Webhook Verification**:
-  - Webhook signatures (`X-Razorpay-Signature`) are verified against the raw, unmodified byte stream (`express.raw({ type: '*/*' })`).
-  - Parsing and re-stringifying JSON prior to signature checking is strictly prevented to avoid whitespace/encoding tampering vulnerabilities.
-- **Idempotency Protection**:
-  - Webhooks are tracked via deterministic event identifiers (`evt_{event}_{paymentId}`).
-  - Duplicate deliveries are idempotently suppressed (`200 OK`) without re-executing actions or creating duplicate ledger/audit entries.
-- **Zero Secrets in Logs or Audit Records**:
-  - Audit logs and diagnostic traces are guarded by `assertNoSecrets()`, which programmatically asserts that API keys, webhook secrets, and credentials can never be persisted or returned over the wire.
+Digital businesses lose significant revenue due to failed subscription renewals, declined payments, expired cards, insufficient balances, and payment gateway issues.
 
-## 5. Hackathon Demo Features (Phase 11)
+Current recovery processes are:
 
-RevenueShield AI is optimized for immediate hackathon judge comprehension (the 10-second rule):
+- Reactive
+- Manual
+- Non-prioritized
+- Difficult to audit
+- Expensive to operate
 
-### 10-Second Executive Summary
-> **"RevenueShield AI detects recurring revenue at risk, diagnoses payment failure causes, selects high-leverage interventions, applies strict financial safety guardrails, executes in a controlled test environment, and proves incremental recovered revenue via single-draw counterfactual attribution."**
+Businesses often treat every failed payment equally, resulting in poor recovery rates and unnecessary operational effort.
 
-### Interactive Demo Highlights in UI
-1. **Interactive Demo Guide**: One-click modal accessible from the header explaining the 6-stage lifecycle, counterfactual methodology, and judge evaluation criteria.
-2. **Dynamic Financial Guardrails Panel**:
-   - Live Manual Approval Threshold slider (`₹500` to `₹100,000`).
-   - Max Automated Attempts selector (`1` to `5`).
-   - Global Execution Emergency Kill Switch toggle.
-   - Strategy feature toggles (Smart Retries, Payment Method Links, Notifications).
-   - Dynamic in-place re-evaluation demonstrating that **Prediction != Authorization**.
-3. **Razorpay Test Webhook Simulator**:
-   - Allows judges to trigger test webhook events (`payment.failed`, `subscription.halted`) with realistic bank failure codes (`BAD_REQUEST_PAYMENT_DECLINED`, `GATEWAY_ERROR`).
-   - Inspects raw payload, HMAC-SHA256 signature calculation, normalization, and immediate ledger update.
-4. **Zero-Secrets Audit Trail Inspector**:
-   - Inspects immutable audit records for every executed decision.
-   - Live security badge confirming 0 secrets, zero raw card tokens, and zero webhook secrets.
-5. **Counterfactual Single-Draw Proof**:
-   - Displays the exact shared uniform random draw `u ~ Uniform(0, 1)` alongside baseline vs. agent recovery thresholds, proving non-negative monotonic lift.
+RevenueShield AI solves this challenge through an autonomous AI-driven recovery workflow that:
+
+- Detects payment failures
+- Diagnoses root causes
+- Predicts recovery probability
+- Prioritizes cases based on business impact
+- Selects optimal intervention strategies
+- Enforces policy guardrails
+- Maintains complete audit trails
+- Generates customer communication automatically
 
 ---
 
-## 6. Verification & Testing
+# 🎯 Project Objective
 
-The repository features comprehensive automated test coverage across all 11 phases:
+RevenueShield AI helps businesses recover lost revenue intelligently and transparently.
+
+The platform:
+
+- Predicts which failed payments are recoverable
+- Prioritizes high-value recovery opportunities
+- Automates intervention planning
+- Enforces governance and approval workflows
+- Maintains explainable AI decisions
+- Generates recovery communications in real time
+
+---
+
+# 🏗️ System Architecture
+
+Payment Failure Event
+        ↓
+Detection Engine
+        ↓
+Diagnosis Engine
+        ↓
+Recovery Probability Model
+        ↓
+Priority Scoring Engine
+        ↓
+Intervention Planner
+        ↓
+Policy Guardrails
+        ↓
+Approval Workflow
+        ↓
+Execution Engine
+        ↓
+Email / Recovery Action
+        ↓
+Audit Trail & Analytics
+
+---
+
+# ✨ Core Features
+
+## 1. Intelligent Failure Diagnosis
+
+Analyzes payment failure reasons such as:
+
+- Insufficient Balance
+- Expired Card
+- Bank Decline
+- UPI Failure
+- Payment Gateway Failure
+- Subscription Cancellation Risk
+
+Provides explainable reasoning for every classification.
+
+---
+
+## 2. Recovery Probability Prediction
+
+Uses machine learning-inspired scoring models to estimate:
+
+- Likelihood of successful recovery
+- Customer recovery potential
+- Future payment success probability
+
+Output:
+
+- Recovery Score
+- Recovery Probability (%)
+
+---
+
+## 3. AI Priority Scoring
+
+Ranks recovery opportunities using:
+
+- Revenue at Risk
+- Recovery Probability
+- Customer Value
+- Failure Severity
+
+Helps operations teams focus on the highest-impact cases first.
+
+---
+
+## 4. Autonomous Intervention Planning
+
+Automatically recommends actions such as:
+
+### Smart Retry
+
+Retry payment at optimized times.
+
+### Payment Link
+
+Send instant recovery payment links.
+
+### Discount Offer
+
+Provide targeted incentives.
+
+### Escalation
+
+Escalate high-value accounts for manual review.
+
+### No Action
+
+Avoid wasting resources on low-probability cases.
+
+---
+
+## 5. Policy Guardrails
+
+Ensures every decision complies with business rules.
+
+Examples:
+
+- Retry limits
+- Approval thresholds
+- Risk restrictions
+- Recovery caps
+- Compliance constraints
+
+---
+
+## 6. Human Approval Workflow
+
+For sensitive actions, RevenueShield AI introduces:
+
+### Pending Approval
+
+Decision waiting for review.
+
+### Approved
+
+Ready for execution.
+
+### Rejected
+
+Blocked by governance policy.
+
+This ensures AI remains controllable and transparent.
+
+---
+
+## 7. Audit Trail Engine
+
+Every decision creates an immutable audit record containing:
+
+- Timestamp
+- Case ID
+- Event ID
+- Recovery Action
+- Policy Decision
+- Outcome
+- Attribution
+- Approval Status
+
+Benefits:
+
+- Compliance
+- Governance
+- Explainability
+- Accountability
+
+---
+
+## 8. Email Recovery Automation
+
+Integrated with:
+
+- Resend Email API
+
+Automatically generates customer-facing communications for:
+
+- Payment Recovery
+- Payment Retry
+- Discount Offers
+- Escalation Notices
+
+Email notifications are triggered in real time.
+
+---
+
+## 9. Razorpay Webhook Integration
+
+Supports:
+
+- Test Mode Simulation
+- Payment Failure Events
+- Recovery Event Generation
+
+Enables end-to-end recovery demonstrations.
+
+---
+
+## 10. Analytics Dashboard
+
+Provides visibility into:
+
+### Revenue Recovery Metrics
+
+- Revenue at Risk
+- Revenue Recovered
+- Recovery Rate
+
+### Operational Metrics
+
+- Cases Processed
+- Interventions Executed
+- Approval Statistics
+
+### AI Metrics
+
+- Recovery Probability Distribution
+- Failure Cause Distribution
+- Intervention Effectiveness
+
+---
+
+# 📊 Dashboard Sections
+
+## Overview Dashboard
+
+Executive summary of:
+
+- Revenue at Risk
+- Active Cases
+- Recovery Opportunities
+- System Status
+
+---
+
+## Analytics & Econometric Lift
+
+Measures impact generated by AI recommendations.
+
+Tracks:
+
+- Recovery performance
+- Intervention effectiveness
+- Revenue improvements
+
+---
+
+## Audit Trail
+
+Complete history of AI decisions and actions.
+
+---
+
+## Email Templates
+
+Preview customer communications before delivery.
+
+---
+
+## Guardrails
+
+Business rule management layer.
+
+---
+
+## Demo Guides
+
+Interactive walkthrough for judges and evaluators.
+
+---
+
+## Razorpay Simulator
+
+Allows simulation of payment failures and recovery scenarios.
+
+---
+
+# 🧠 AI Components
+
+RevenueShield AI contains multiple specialized AI agents:
+
+### Diagnosis Agent
+
+Identifies payment failure causes.
+
+### Probability Agent
+
+Predicts recovery likelihood.
+
+### Intervention Agent
+
+Chooses optimal recovery strategy.
+
+### Policy Agent
+
+Validates business rules.
+
+### Execution Agent
+
+Executes approved actions.
+
+### Audit Agent
+
+Records all decisions.
+
+---
+
+# 🛠️ Technology Stack
+
+## Frontend
+
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
+- Recharts
+
+## Backend
+
+- Node.js
+- Express
+
+## AI Layer
+
+- Google AI Studio
+- Agent-Based Decision Pipeline
+
+## Communication
+
+- Resend Email API
+
+## Payments
+
+- Razorpay Test Integration
+
+---
+
+# ⚙️ Local Setup
+
+## Prerequisites
+
+- Node.js 18+
+- npm
+
+---
+
+## Installation
+
+Clone repository:
 
 ```bash
-# Run the complete test suite (Phases 1 through 11 - 78 total tests)
-npm test
+git clone https://github.com/tamanna0777/Revenueshield-ai.git
 
-# Typecheck and lint codebase
-npm run lint
+cd Revenueshield-ai
+```
 
-# Compile production build
+Install dependencies:
+
+```bash
+npm install
+```
+
+---
+
+## Environment Variables
+
+Create a `.env` file:
+
+```env
+RESEND_API_KEY=your_resend_api_key
+
+RAZORPAY_KEY_ID=your_key_id
+
+RAZORPAY_KEY_SECRET=your_secret
+
+RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
+```
+
+---
+
+## Run Development Server
+
+```bash
+npm run dev
+```
+
+Application starts at:
+
+```text
+http://localhost:3000
+```
+
+---
+
+## Build Production Version
+
+```bash
 npm run build
 ```
 
-### Test Suite Breakdown
-- `tests/phase1_phase2.test.ts`: Probability calculation, clamping, risk formulas, priority scoring (14 tests).
-- `tests/phase3_phase4.test.ts`: Single-draw simulation, monotonic counterfactual proof, ledger math (11 tests).
-- `tests/phase5_phase6.test.ts`: 5,000 synthetic customers, 20,000 payment events, ML model fit, ROC-AUC/PR-AUC (13 tests).
-- `tests/phase7_phase8.test.ts`: Full application service, ledger reconciliation, KPI formatting, case sorting (8 tests).
-- `tests/phase9_phase10.test.ts`: Razorpay test webhook signature verification, normalization, idempotency, guardrails (22 tests).
-- `tests/phase11.test.ts`: Demo state reset, dynamic policy re-evaluation, simulator pipeline, zero-secrets invariants (10 tests).
+---
+
+## Run Tests
+
+```bash
+npm test
+```
+
+---
+
+# 📂 Project Structure
+
+```text
+src/
+│
+├── agents/
+│   ├── audit.ts
+│   ├── execution.ts
+│   ├── intervention.ts
+│   ├── ledger.ts
+│   ├── policy.ts
+│   └── probability.ts
+│
+├── components/
+│   └── dashboard/
+│
+├── services/
+│
+├── ml/
+│
+├── data/
+│
+├── utils/
+│
+└── tests/
+```
+
+---
+
+# 🔒 Security & Governance
+
+RevenueShield AI enforces:
+
+- Auditability
+- Explainability
+- Human Oversight
+- Policy Enforcement
+- Kill Switch Controls
+- Approval Workflows
+- Secret Protection Rules
+
+No API secrets are stored in audit records.
+
+---
+
+# 🚀 Future Enhancements
+
+- Real Razorpay Production Integration
+- WhatsApp Recovery Automation
+- SMS Recovery Automation
+- Adaptive ML Training
+- Multi-Gateway Support
+- A/B Intervention Testing
+- Recovery Optimization Engine
+
+---
+
+# 👩‍💻 Developer
+
+**Tamanna Shaikh**
+
+Razorpay AI Builder Internship 2026
+
+---
+
+# 🏁 Final Note
+
+RevenueShield AI demonstrates how autonomous AI systems can transform failed payment recovery from a manual operational task into an intelligent, explainable, policy-compliant, and revenue-generating workflow.
+
+By combining AI decision-making, governance controls, auditability, and real-time recovery automation, RevenueShield AI helps businesses maximize recovered revenue while maintaining trust, transparency, and operational efficiency.
